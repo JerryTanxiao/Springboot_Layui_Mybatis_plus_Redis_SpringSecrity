@@ -1,0 +1,22 @@
+<!DOCTYPE html >
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>显示</title>
+</head>
+<script type="text/javascript" src="../resources/js/jquery.min.js"></script>
+<body>
+<div id="sh"></div>
+</body>
+<script th:inline="javascript">
+    var id=[[${id}]];
+    $(function () {
+        $.post("/users/show",{
+            id:id
+        },function (result) {
+            console.info(result);
+            $("#sh").append(result.content);
+        })
+    })
+</script>
+</html>

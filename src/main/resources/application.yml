@@ -1,0 +1,29 @@
+spring:
+  thymeleaf:
+    cache: false
+  datasource:
+    username: root
+    password: Root!!2019
+    # 如果数据库乱码 则编码格式有问题
+    url: jdbc:mysql://47.106.227.129:3306/db?serverTimezone=UTC&useUnicode=true&characterEncoding=UTF8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: 47.106.227.129
+    #邮箱 需要授权码
+  mail:
+    host: smtp.163.com
+    password: ILY520520o
+    username: JerryTan_xiao@163.com
+    properties:
+        mail:
+          smtp:
+            ssl:
+              enable: true
+logging:
+  level:
+    tt: debug
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**.xml
+  type-aliases-package: com.pojo
+#日志报告
+#debug: true

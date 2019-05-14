@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>layui前后端交互分页</title>
+    <!--只有 rel 属性的 "stylesheet" 值得到了所有浏览器的支持。其他值只得到了部分地支持。 一定要加上-->
+    <link rel="stylesheet" href="../resources/css/layui.css"  media="all">
+</head>
+<style>
+    .layui-btn-sm{
+        height: 38px;
+        line-height: 30px;
+        padding:0 10px;
+        font-size: 20px;
+    }
+</style>
+<body >
+<!--//这里是弹出层的表单信息
+//表单的id用于表单的选择，style是在本页隐藏，只有点击编辑才会弹出-->
+<div class="layui-row" id="popUpdateTest" style="display:none;">
+    <div class="layui-col-md10">
+        <form class="layui-form layui-from-pane" action="fenye" style="margin-top:20px" method="get" >
+            <div class="layui-form-item" style="display:none">
+                <label class="layui-form-label">用戶id</label>
+                <div class="layui-input-block">
+                    <input id="uid" type="text" name="id"   autocomplete="off" placeholder="id" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户名</label>
+                <div class="layui-input-block">
+                    <input id="user" type="text" name="user"  required  lay-verify="required"  autocomplete="off" placeholder="用户名" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">姓名</label>
+                <div class="layui-input-block">
+                    <input type="text" id="name" name="name"  required  lay-verify="required" autocomplete="off" placeholder="密码" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item" style="margin-top:40px">
+                <div class="layui-input-block">
+                    <button class="layui-btn  layui-btn-submit " lay-submit="" lay-filter="formDemo">确认修改</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="layui-hide" id="test" lay-filter="test" style="width: 500px;"></table>
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container" style="width: 1000px; font-size: smaller;">
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+        <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>
+        <button class="layui-btn layui-btn-sm" lay-event="addUser"><i class="layui-icon layui-icon-add-circle-fine"></i>添加用户</button>
+        <div class="layui-inline">
+            <input class="layui-input" name="context"  autocomplete="off" placeholder="请输入你要搜索的内容"  style="margin-bottom: 15px;">
+        </div>
+        <button class="layui-btn layui-btn-sm" lay-event="selecUser">搜索</button>
+        <button class="layui-btn layui-btn-sm" lay-event="refresh"><i class="layui-icon layui-icon-refresh"></i>刷新</button>
+    </div>
+</script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script src="../resources/layui.js" charset="utf-8"></script>
+<script th:inline="none">
+    layui.use(['form','layer','laydate','table','laytpl'], function(){
+        var form = layui.form,
+            layer = parent.layer === undefined ? layui.layer : top.layer,
+            $ = layui.jquery,
+            laydate = layui.laydate,
+            laytpl = layui.laytpl,
+            table = layui.table;
+        table.render({
+            elem: '#test'
+            ,url:'/user/u'
+            ,toolbar: '#toolbarDemo'
+            ,title: '用户数据表'
+            ,cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                ,{field:'id', title:'ID', fixed: 'left', unresize: true, sort: true}
+                ,{field:'user', title:'用户名', width:200/*, edit: 'text'*/}
+                ,{field:'name', title:'姓名', width:200}
+                ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:200}
+            ]]
+            ,page: true
+        });
+        //头工具栏事件
+        table.on('toolbar(test)', function(obj){
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch(obj.event){
+                case 'getCheckData':
+                    var data = checkStatus.data;
+                    layer.alert(JSON.stringify(data));
+                    break;
+                case 'getCheckLength':
+                    var data = checkStatus.data;
+                    layer.msg('选中了：'+ data.length + ' 个');
+                    break;
+                case 'isAll':
+                    layer.msg(checkStatus.isAll ? '全选': '未全选');
+                    break;
+                case 'addUser':
+                    layer.open({
+                        type:1,
+                        title:"修改用户信息",
+                        area:["420px","330px"],
+                        content:$("#popUpdateTest")//引用的弹出层的页面层的方式加载修改界面表单
+                    });
+                    break;
+                case 'refresh':
+                    layer.load();
+                    setTimeout(function(){
+                        window.parent.location.reload();//修改成功后刷新父界面
+                        layer.closeAll('loading');
+                    }, 2000);
+                    break;
+            };
+        });
+        //监听行工具事件
+        table.on('tool(test)', function(obj){
+            var data = obj.data;
+            // console.log(obj)
+            if(obj.event === 'del'){
+                layer.confirm('真的删除行么', function(index){
+                    layer.msg("你已经成功删除！")
+                    $.ajax({
+                        type:"post",
+                        url:"/user/deleteUserByIds",
+                        data:{
+                            "id":data.id
+                        },
+                        dataType:"json",
+                        success:function (res) {
+                            obj.del();
+                            layer.close(index);
+                        }
+                    })
+                });
+            } else if(obj.event === 'edit'){
+                layer.open({
+                    type:1,
+                    title:"修改用户信息",
+                    area:["420px","330px"],
+                    content:$("#popUpdateTest"),//引用的弹出层的页面层的方式加载修改界面表单
+                    success:function (layero, index) {
+                        if(obj){
+                            // 取到弹出层里的元素，并把编辑的内容放进去
+                            $("#user").val(data.user);  //用户名
+                            $("#name").val(data.name);  //登录时间
+                            $("#uid").val(data.id);
+                            // 记得重新渲染表单
+                            form.render();
+                        }
+                    }
+                });
+            }
+        });
+        //监听提交
+        form.on('submit(formDemo)', function(data){
+         /*   layer.msg(JSON.stringify(data.field));*/
+            $.ajax({
+                type:"post",
+                url:"../user/editUser",
+                contentType:"application/json;charset=utf-8",
+                data:JSON.stringify(data.field),
+                dataType:"json",
+                success:function (res) {
+                    window.parent.location.reload();//修改成功后刷新父界面
+                    layer.closeAll();//关闭所有的弹出层
+                }
+            })
+            return false;
+        });
+    });
+</script>
+</body>
+</html>
